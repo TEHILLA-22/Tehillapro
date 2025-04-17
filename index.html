@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEHILLA PRO | Ultimate Scientific Calculator</title>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --secondary: #10b981;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --accent: #8b5cf6;
+            --info: #06b6d4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'IBM Plex Mono', 'Fira Code', 'Consolas', monospace;
+        }
+
+        body {
+            background-color: #f1f5f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--dark);
+        }
+
+        .calculator {
+            width: 420px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+
+        .header {
+            background: var(--dark);
+            color: white;
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 8px;
+        }
+
+        .mode-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active {
+            background: var(--primary);
+        }
+
+        .mode-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .display {
+            padding: 20px;
+            text-align: right;
+            background: var(--dark);
+            color: white;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .display .history {
+            min-height: 20px;
+            font-size: 0.9rem;
+            color: var(--gray);
+            word-break: break-all;
+            margin-bottom: 10px;
+            opacity: 0.8;
+        }
+
+        .display .output {
+            font-size: 2.5rem;
+            font-weight: 500;
+            word-wrap: break-word;
+            line-height: 1;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f1f5f9;
+            border-bottom: 1px solid #e2e8f0;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 12px 15px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--gray);
+            transition: all 0.2s;
+            white-space: nowrap;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+            background: white;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            padding: 15px;
+            background: white;
+        }
+
+        button {
+            border: none;
+            outline: none;
+            padding: 15px 0;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+            background: #f8fafc;
+            color: var(--dark);
+            font-weight: 500;
+            border: 1px solid #e2e8f0;
+        }
+
+        button:hover {
+            background: #f1f5f9;
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.number {
+            background: white;
+        }
+
+        button.operator {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        button.operator:hover {
+            background: #2563eb;
+        }
+
+        button.function {
+            background: var(--secondary);
+            color: white;
+            border-color: var(--secondary);
+            font-size: 0.85rem;
+        }
+
+        button.function:hover {
+            background: #059669;
+        }
+
+        button.special {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+            font-size: 0.85rem;
+        }
+
+        button.special:hover {
+            background: #7c3aed;
+        }
+
+        button.equals {
+            background: var(--warning);
+            color: white;
+            grid-column: span 2;
+            border-color: var(--warning);
+        }
+
+        button.equals:hover {
+            background: #d97706;
+        }
+
+        button.clear {
+            background: var(--danger);
+            color: white;
+            border-color: var(--danger);
+        }
+
+        button.clear:hover {
+            background: #dc2626;
+        }
+
+        button.constant {
+            background: var(--info);
+            color: white;
+            border-color: var(--info);
+            font-size: 0.85rem;
+        }
+
+        button.constant:hover {
+            background: #0891b2;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 12px;
+            color: var(--gray);
+            font-size: 0.75rem;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        /* Panel styles */
+        .panel {
+            display: none;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            padding: 0 15px 15px 15px;
+            background: white;
+        }
+
+        .panel.active {
+            display: grid;
+        }
+
+        /* Graph canvas */
+        .graph-container {
+            display: none;
+            padding: 15px;
+            background: white;
+        }
+
+        .graph-container.active {
+            display: block;
+        }
+
+        #graphCanvas {
+            width: 100%;
+            height: 200px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+
+        /* Matrix input modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .matrix-input {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .matrix-input td {
+            padding: 5px;
+        }
+
+        .matrix-input input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 120px;
+            background-color: var(--dark);
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.8rem;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="header">
+            <span>TEHILLA PRO</span>
+            <div class="mode-selector">
+                <button class="mode-btn active" id="deg-btn">DEG</button>
+                <button class="mode-btn" id="rad-btn">RAD</button>
+                <button class="mode-btn" id="grad-btn">GRAD</button>
+                <button class="mode-btn" id="complex-btn">CMPLX</button>
+            </div>
+        </div>
+        
+        <div class="display">
+            <div class="history" id="history"></div>
+            <div class="output" id="output">0</div>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="basic">Basic</div>
+            <div class="tab" data-tab="scientific">Scientific</div>
+            <div class="tab" data-tab="graphing">Graphing</div>
+            <div class="tab" data-tab="matrix">Matrix</div>
+            <div class="tab" data-tab="calculus">Calculus</div>
+            <div class="tab" data-tab="statistics">Stats</div>
+            <div class="tab" data-tab="physics">Physics</div>
+            <div class="tab" data-tab="programmer">Programmer</div>
+            <div class="tab" data-tab="constants">Constants</div>
+        </div>
+        
+        <!-- Basic Calculator -->
+        <div class="button-grid" id="basic-panel">
+            <!-- First Row -->
+            <button class="function" onclick="addToDisplay('Math.PI')">π</button>
+            <button class="function" onclick="addToDisplay('Math.E')">e</button>
+            <button class="function" onclick="addToDisplay('(')">(</button>
+            <button class="function" onclick="addToDisplay(')')">)</button>
+            <button class="clear" onclick="clearDisplay()">AC</button>
+
+            <!-- Second Row -->
+            <button class="function" onclick="addToDisplay('Math.sin(')">sin</button>
+            <button class="function" onclick="addToDisplay('Math.cos(')">cos</button>
+            <button class="function" onclick="addToDisplay('Math.tan(')">tan</button>
+            <button class="function" onclick="addToDisplay('Math.log(')">ln</button>
+            <button class="operator" onclick="addToDisplay('Math.sqrt(')">√</button>
+
+            <!-- Third Row -->
+            <button class="number" onclick="addToDisplay('7')">7</button>
+            <button class="number" onclick="addToDisplay('8')">8</button>
+            <button class="number" onclick="addToDisplay('9')">9</button>
+            <button class="operator" onclick="addToDisplay('/')">÷</button>
+            <button class="function" onclick="addToDisplay('**')">x^y</button>
+
+            <!-- Fourth Row -->
+            <button class="number" onclick="addToDisplay('4')">4</button>
+            <button class="number" onclick="addToDisplay('5')">5</button>
+            <button class="number" onclick="addToDisplay('6')">6</button>
+            <button class="operator" onclick="addToDisplay('*')">×</button>
+            <button class="function" onclick="addToDisplay('Math.log10(')">log</button>
+
+            <!-- Fifth Row -->
+            <button class="number" onclick="addToDisplay('1')">1</button>
+            <button class="number" onclick="addToDisplay('2')">2</button>
+            <button class="number" onclick="addToDisplay('3')">3</button>
+            <button class="operator" onclick="addToDisplay('-')">-</button>
+            <button class="function" onclick="addToDisplay('factorial(')">n!</button>
+
+            <!-- Sixth Row -->
+            <button class="number" onclick="addToDisplay('0')">0</button>
+            <button class="number" onclick="addToDisplay('.')">.</button>
+            <button class="operator" onclick="backspace()">⌫</button>
+            <button class="operator" onclick="addToDisplay('+')">+</button>
+            <button class="function" onclick="addToDisplay('1/(')">1/x</button>
+
+            <!-- Seventh Row -->
+            <button class="special" onclick="addToDisplay('Math.abs(')">|x|</button>
+            <button class="special" onclick="addToDisplay('Math.pow(10,')">10^x</button>
+            <button class="special" onclick="addToDisplay('Math.pow(2,')">2^x</button>
+            <button class="equals" onclick="calculate()">=</button>
+        </div>
+        
+        <!-- Scientific Panel -->
+        <div class="panel" id="scientific-panel">
+            <!-- First Row -->
+            <button class="function" onclick="addToDisplay('Math.asin(')">sin⁻¹</button>
+            <button class="function" onclick="addToDisplay('Math.acos(')">cos⁻¹</button>
+            <button class="function" onclick="addToDisplay('Math.atan(')">tan⁻¹</button>
+            <button class="function" onclick="addToDisplay('Math.sinh(')">sinh</button>
+            <button class="function" onclick="addToDisplay('Math.cosh(')">cosh</button>
+            
+            <!-- Second Row -->
+            <button class="function" onclick="addToDisplay('Math.tanh(')">tanh</button>
+            <button class="function" onclick="addToDisplay('Math.exp(')">e^x</button>
+            <button class="function" onclick="addToDisplay('Math.cbrt(')">∛x</button>
+            <button class="function" onclick="addToDisplay('nthRoot(')">ⁿ√x</button>
+            <button class="function" onclick="addToDisplay('Math.log2(')">log₂</button>
+            
+            <!-- Third Row -->
+            <button class="function" onclick="addToDisplay('Math.floor(')">floor</button>
+            <button class="function" onclick="addToDisplay('Math.ceil(')">ceil</button>
+            <button class="function" onclick="addToDisplay('Math.round(')">round</button>
+            <button class="function" onclick="addToDisplay('Math.random()')">rand</button>
+            <button class="function" onclick="addToDisplay('Math.sign(')">sign</button>
+            
+            <!-- Fourth Row -->
+            <button class="function" onclick="addToDisplay('toDegrees(')">toDeg</button>
+            <button class="function" onclick="addToDisplay('toRadians(')">toRad</button>
+            <button class="function" onclick="addToDisplay('toGradians(')">toGrad</button>
+            <button class="function" onclick="addToDisplay('Math.hypot(')">hypot</button>
+            <button class="function" onclick="addToDisplay('Math.atan2(')">atan2</button>
+            
+            <!-- Fifth Row -->
+            <button class="function" onclick="addToDisplay('Math.trunc(')">trunc</button>
+            <button class="function" onclick="addToDisplay('gcd(')">GCD</button>
+            <button class="function" onclick="addToDisplay('lcm(')">LCM</button>
+            <button class="function" onclick="addToDisplay('mod(')">MOD</button>
+            <button class="function" onclick="addToDisplay('Math.pow(Math.E,')">e^x</button>
+        </div>
+        
+        <!-- Graphing Panel -->
+        <div class="graph-container" id="graphing-panel">
+            <canvas id="graphCanvas"></canvas>
+        </div>
+        <div class="panel" id="graphing-buttons">
+            <!-- First Row -->
+            <button class="special" onclick="graphFunction('x')">y=x</button>
+            <button class="special" onclick="graphFunction('x^2')">y=x²</button>
+            <button class="special" onclick="graphFunction('sin(x)')">y=sin(x)</button>
+            <button class="special" onclick="graphFunction('cos(x)')">y=cos(x)</button>
+            <button class="special" onclick="graphFunction('exp(x)')">y=e^x</button>
+            
+            <!-- Second Row -->
+            <button class="special" onclick="graphFunction('log(x)')">y=ln(x)</button>
+            <button class="special" onclick="graphFunction('sqrt(x)')">y=√x</button>
+            <button class="special" onclick="graphFunction('abs(x)')">y=|x|</button>
+            <button class="special" onclick="graphFunction('1/x')">y=1/x</button>
+            <button class="special" onclick="graphFunction('x^3')">y=x³</button>
+            
+            <!-- Third Row -->
+            <button class="special" onclick="promptGraphFunction()">Custom</button>
+            <button class="special" onclick="clearGraph()">Clear</button>
+            <button class="special" onclick="zoomIn()">Zoom+</button>
+            <button class="special" onclick="zoomOut()">Zoom-</button>
+            <button class="special" onclick="panLeft()">←</button>
+            
+            <!-- Fourth Row -->
+            <button class="special" onclick="panRight()">→</button>
+            <button class="special" onclick="panUp()">↑</button>
+            <button class="special" onclick="panDown()">↓</button>
+            <button class="special" onclick="findRoot()">Root</button>
+            <button class="special" onclick="findIntersection()">Intersect</button>
+        </div>
+        
+        <!-- Matrix Panel -->
+        <div class="panel" id="matrix-panel">
+            <!-- First Row -->
+            <button class="special" onclick="showMatrixInput(2,2)">2×2</button>
+            <button class="special" onclick="showMatrixInput(3,3)">3×3</button>
+            <button class="special" onclick="showMatrixInput(4,4)">4×4</button>
+            <button class="special" onclick="showMatrixInput(2,3)">2×3</button>
+            <button class="special" onclick="showMatrixInput(3,2)">3×2</button>
+            
+            <!-- Second Row -->
+            <button class="special" onclick="matrixDeterminant()">DET</button>
+            <button class="special" onclick="matrixInverse()">INV</button>
+            <button class="special" onclick="matrixTranspose()">TRANS</button>
+            <button class="special" onclick="matrixAdd()">ADD</button>
+            <button class="special" onclick="matrixMultiply()">MUL</button>
+            
+            <!-- Third Row -->
+            <button class="special" onclick="matrixScalarMultiply()">SCALE</button>
+            <button class="special" onclick="matrixPower()">POW</button>
+            <button class="special" onclick="matrixRowEchelon()">REF</button>
+            <button class="special" onclick="matrixReducedRowEchelon()">RREF</button>
+            <button class="special" onclick="matrixRank()">RANK</button>
+            
+            <!-- Fourth Row -->
+            <button class="special" onclick="matrixTrace()">TRACE</button>
+            <button class="special" onclick="matrixEigenvalues()">EIGEN</button>
+            <button class="special" onclick="matrixLU()">LU</button>
+            <button class="special" onclick="matrixQR()">QR</button>
+            <button class="special" onclick="matrixSVD()">SVD</button>
+        </div>
+        
+        <!-- Calculus Panel -->
+        <div class="panel" id="calculus-panel">
+            <!-- First Row -->
+            <button class="special" onclick="calculateDerivative()">d/dx</button>
+            <button class="special" onclick="calculateIntegral()">∫dx</button>
+            <button class="special" onclick="calculateLimit()">lim</button>
+            <button class="special" onclick="calculateTaylorSeries()">Taylor</button>
+            <button class="special" onclick="calculatePartialDerivative()">∂/∂x</button>
+            
+            <!-- Second Row -->
+            <button class="special" onclick="calculateDoubleIntegral()">∬dxdy</button>
+            <button class="special" onclick="calculateGradient()">∇f</button>
+            <button class="special" onclick="calculateDivergence()">∇·F</button>
+            <button class="special" onclick="calculateCurl()">∇×F</button>
+            <button class="special" onclick="calculateLaplacian()">∇²</button>
+            
+            <!-- Third Row -->
+            <button class="special" onclick="calculateLineIntegral()">∫C F·dr</button>
+            <button class="special" onclick="calculateSurfaceIntegral()">∫∫S F·dS</button>
+            <button class="special" onclick="calculateFourierTransform()">F(ω)</button>
+            <button class="special" onclick="calculateLaplaceTransform()">L{f}</button>
+            <button class="special" onclick="calculateZTransform()">Z{f}</button>
+        </div>
+        
+        <!-- Statistics Panel -->
+        <div class="panel" id="statistics-panel">
+            <!-- First Row -->
+            <button class="special" onclick="calculateMean()">Mean</button>
+            <button class="special" onclick="calculateMedian()">Median</button>
+            <button class="special" onclick="calculateMode()">Mode</button>
+            <button class="special" onclick="calculateVariance()">Var</button>
+            <button class="special" onclick="calculateStdDev()">σ</button>
+            
+            <!-- Second Row -->
+            <button class="special" onclick="calculateCorrelation()">Corr</button>
+            <button class="special" onclick="calculateRegression()">Reg</button>
+            <button class="special" onclick="calculatePermutation()">nPr</button>
+            <button class="special" onclick="calculateCombination()">nCr</button>
+            <button class="special" onclick="calculateFactorial()">n!</button>
+            
+            <!-- Third Row -->
+            <button class="special" onclick="calculateProbability()">P(x)</button>
+            <button class="special" onclick="calculateBinomial()">Binom</button>
+            <button class="special" onclick="calculatePoisson()">Poisson</button>
+            <button class="special" onclick="calculateNormal()">Normal</button>
+            <button class="special" onclick="calculateChiSquare()">χ²</button>
+            
+            <!-- Fourth Row -->
+            <button class="special" onclick="calculateTTest()">t-test</button>
+            <button class="special" onclick="calculateZTest()">z-test</button>
+            <button class="special" onclick="calculateANOVA()">ANOVA</button>
+            <button class="special" onclick="calculateConfidence()">CI</button>
+            <button class="special" onclick="calculateHypothesis()">Hypo</button>
+        </div>
+        
+        <!-- Physics Panel -->
+        <div class="panel" id="physics-panel">
+            <!-- First Row -->
+            <button class="constant" onclick="addToDisplay('G = 6.67430e-11')">G</button>
+            <button class="constant" onclick="addToDisplay('c = 299792458')">c</button>
+            <button class="constant" onclick="addToDisplay('h = 6.62607015e-34')">h</button>
+            <button class="constant" onclick="addToDisplay('k = 1.380649e-23')">k</button>
+            <button class="constant" onclick="addToDisplay('e = 1.602176634e-19')">e</button>
+            
+            <!-- Second Row -->
+            <button class="constant" onclick="addToDisplay('me = 9.10938356e-31')">mₑ</button>
+            <button class="constant" onclick="addToDisplay('mp = 1.6726219e-27')">mₚ</button>
+            <button class="constant" onclick="addToDisplay('R = 8.314462618')">R</button>
+            <button class="constant" onclick="addToDisplay('NA = 6.02214076e23')">Nₐ</button>
+            <button class="constant" onclick="addToDisplay('σ = 5.670374419e-8')">σ</button>
+            
+            <!-- Third Row -->
+            <button class="special" onclick="calculateKinematics()">Kinematics</button>
+            <button class="special" onclick="calculateEnergy()">Energy</button>
+            <button class="special" onclick="calculateMomentum()">Momentum</button>
+            <button class="special" onclick="calculateOhmsLaw()">Ohm's</button>
+            <button class="special" onclick="calculateCoulombsLaw()">Coulomb</button>
+            
+            <!-- Fourth Row -->
+            <button class="special" onclick="calculateKeplersLaw()">Kepler</button>
+            <button class="special" onclick="calculateSchrodinger()">Schrödinger</button>
+            <button class="special" onclick="calculateRelativity()">Relativity</button>
+            <button class="special" onclick="calculateThermo()">Thermo</button>
+            <button class="special" onclick="calculateQuantum()">Quantum</button>
+        </div>
+        
+        <!-- Programmer Panel -->
+        <div class="panel" id="programmer-panel">
+            <!-- First Row -->
+            <button class="special" onclick="setBase('bin')">BIN</button>
+            <button class="special" onclick="setBase('oct')">OCT</button>
+            <button class="special" onclick="setBase('dec')">DEC</button>
+            <button class="special" onclick="setBase('hex')">HEX</button>
+            <button class="special" onclick="toggleBitMode()">BIT</button>
+            
+            <!-- Second Row -->
+            <button class="special" onclick="addToDisplay('~')">NOT</button>
+            <button class="special" onclick="addToDisplay('<<')">LSH</button>
+            <button class="special" onclick="addToDisplay('>>')">RSH</button>
+            <button class="special" onclick="addToDisplay('>>>')">RUS</button>
+            <button class="special" onclick="addToDisplay('&')">AND</button>
+            
+            <!-- Third Row -->
+            <button class="special" onclick="addToDisplay('|')">OR</button>
+            <button class="special" onclick="addToDisplay('^')">XOR</button>
+            <button class="special" onclick="addToDisplay('~(')">NAND</button>
+            <button class="special" onclick="addToDisplay('~(')">NOR</button>
+            <button class="special" onclick="addToDisplay('~(')">XNOR</button>
+            
+            <!-- Fourth Row -->
+            <button class="special" onclick="convertToBinary()">→BIN</button>
+            <button class="special" onclick="convertToOctal()">→OCT</button>
+            <button class="special" onclick="convertToHex()">→HEX</button>
+            <button class="special" onclick="convertToDecimal()">→DEC</button>
+            <button class="special" onclick="bitCount()">BIT CNT</button>
+        </div>
+        
+        <!-- Constants Panel -->
+        <div class="panel" id="constants-panel">
+            <!-- First Row -->
+            <button class="constant" onclick="addToDisplay('Math.PI')">π</button>
+            <button class="constant" onclick="addToDisplay('Math.E')">e</button>
+            <button class="constant" onclick="addToDisplay('Math.LN2')">ln(2)</button>
+            <button class="constant" onclick="addToDisplay('Math.LN10')">ln(10)</button>
+            <button class="constant" onclick="addToDisplay('Math.LOG2E')">log₂e</button>
+            
+            <!-- Second Row -->
+            <button class="constant" onclick="addToDisplay('Math.LOG10E')">log₁₀e</button>
+            <button class="constant" onclick="addToDisplay('Math.SQRT2')">√2</button>
+            <button class="constant" onclick="addToDisplay('Math.SQRT1_2')">√½</button>
+            <button class="constant" onclick="addToDisplay('Infinity')">∞</button>
+            <button class="constant" onclick="addToDisplay('NaN')">NaN</button>
+            
+            <!-- Third Row -->
+            <button class="constant" onclick="addToDisplay('φ = 1.61803398875')">φ</button>
+            <button class="constant" onclick="addToDisplay('γ = 0.5772156649')">γ</button>
+            <button class="constant" onclick="addToDisplay('α = 7.2973525693e-3')">α</button>
+            <button class="constant" onclick="addToDisplay('μ0 = 1.25663706212e-6')">μ₀</button>
+            <button class="constant" onclick="addToDisplay('ε0 = 8.8541878128e-12')">ε₀</button>
+            
+            <!-- Fourth Row -->
+            <button class="constant" onclick="addToDisplay('Z0 = 376.730313668')">Z₀</button>
+            <button class="constant" onclick="addToDisplay('me = 9.10938356e-31')">mₑ</button>
+            <button class="constant" onclick="addToDisplay('mp = 1.6726219e-27')">mₚ</button>
+            <button class="constant" onclick="addToDisplay('mn = 1.67492749804e-27')">mₙ</button>
+            <button class="constant" onclick="addToDisplay('a0 = 5.29177210903e-11')">a₀</button>
+        </div>
+        
+        <div class="footer">
+            TEHILLA PRO v3.0 | The Ultimate Scientific Calculator
+        </div>
+    </div>
+
+    <!-- Matrix Input Modal -->
+    <div class="modal" id="matrixModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="matrixModalTitle">Matrix Input</h3>
+                <button class="close-modal" onclick="closeMatrixModal()">&times;</button>
+            </div>
+            <table class="matrix-input" id="matrixInputTable">
+                <!-- Dynamically generated -->
+            </table>
+            <div class="modal-actions">
+                <button onclick="closeMatrixModal()">Cancel</button>
+                <button onclick="saveMatrix()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graph Function Input Modal -->
+    <div class="modal" id="graphModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Enter Function</h3>
+                <button class="close-modal" onclick="closeGraphModal()">&times;</button>
+            </div>
+            <input type="text" id="graphFunctionInput" placeholder="e.g., sin(x)*x^2" style="width:100%;padding:10px;margin-bottom:10px;">
+            <div class="modal-actions">
+                <button onclick="closeGraphModal()">Cancel</button>
+                <button onclick="graphCustomFunction()">Graph</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Calculator state
+        let currentInput = '0';
+        let history = '';
+        let isDegreeMode = true;
+        let isGradMode = false;
+        let isComplexMode = false;
+        let currentMatrix = null;
+        let currentBase = 'dec';
+        let graphFunctions = [];
+        let graphScale = 1;
+        let graphOffsetX = 0;
+        let graphOffsetY = 0;
+        
+        // DOM elements
+        const outputElement = document.getElementById('output');
+        const historyElement = document.getElementById('history');
+        const degBtn = document.getElementById('deg-btn');
+        const radBtn = document.getElementById('rad-btn');
+        const gradBtn = document.getElementById('grad-btn');
+        const complexBtn = document.getElementById('complex-btn');
+        const graphCanvas = document.getElementById('graphCanvas');
+        const ctx = graphCanvas.getContext('2d');
+        
+        // Initialize graph canvas size
+        function initGraphCanvas() {
+            graphCanvas.width = graphCanvas.offsetWidth;
+            graphCanvas.height = graphCanvas.offsetHeight;
+            drawGraph();
+        }
+        
+        // Tab switching
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Hide all panels
+                document.querySelectorAll('.button-grid, .panel, .graph-container')
+                    .forEach(panel => panel.classList.remove('active'));
+                
+                // Show the selected panel
+                const panelId = `${tab.dataset.tab}-panel`;
+                document.getElementById(panelId)?.classList.add('active');
+                
+                // Special case for graphing which has two panels
+                if (tab.dataset.tab === 'graphing') {
+                    document.getElementById('graphing-buttons').classList.add('active');
+                }
+                
+                // Initialize graph if needed
+                if (tab.dataset.tab === 'graphing') {
+                    initGraphCanvas();
+                }
+            });
+        });
+        
+        // Angle mode switching
+        degBtn.addEventListener('click', () => {
+            isDegreeMode = true;
+            isGradMode = false;
+            degBtn.classList.add('active');
+            radBtn.classList.remove('active');
+            gradBtn.classList.remove('active');
+        });
+        
+        radBtn.addEventListener('click', () => {
+            isDegreeMode = false;
+            isGradMode = false;
+            radBtn.classList.add('active');
+            degBtn.classList.remove('active');
+            gradBtn.classList.remove('active');
+        });
+        
+        gradBtn.addEventListener('click', () => {
+            isDegreeMode = false;
+            isGradMode = true;
+            gradBtn.classList.add('active');
+            degBtn.classList.remove('active');
+            radBtn.classList.remove('active');
+        });
+        
+        complexBtn.addEventListener('click', () => {
+            isComplexMode = !isComplexMode;
+            complexBtn.classList.toggle('active');
+        });
+
+        function updateDisplay() {
+            outputElement.textContent = currentInput;
+            historyElement.textContent = history;
+        }
+
+        function addToDisplay(value) {
+            if (currentInput === '0' && value !== '.' && 
+                !value.startsWith('0x') && !value.startsWith('0o') && !value.startsWith('0b')) {
+                currentInput = value;
+            } else {
+                currentInput += value;
+            }
+            updateDisplay();
+        }
+
+        function clearDisplay() {
+            currentInput = '0';
+            history = '';
+            updateDisplay();
+        }
+
+        function backspace() {
+            if (currentInput.length === 1) {
+                currentInput = '0';
+            } else {
+                currentInput = currentInput.slice(0, -1);
+            }
+            updateDisplay();
+        }
+
+        // Mathematical functions
+        function factorial(n) {
+            if (n < 0) return NaN;
+            if (n === 0 || n === 1) return 1;
+            for (let i = n - 1; i >= 1; i--) {
+                n *= i;
+            }
+            return n;
+        }
+        
+        function gcd(a, b) {
+            return b ? gcd(b, a % b) : a;
+        }
+        
+        function lcm(a, b) {
+            return (a * b) / gcd(a, b);
+        }
+        
+        function mod(a, b) {
+            return ((a % b) + b) % b;
+        }
+        
+        function nthRoot(x, n) {
+            return Math.pow(x, 1/n);
+        }
+        
+        function toDegrees(radians) {
+            return radians * (180 / Math.PI);
+        }
+        
+        function toRadians(degrees) {
+            return degrees * (Math.PI / 180);
+        }
+        
+        function toGradians(degrees) {
+            return degrees * (200 / 180);
+        }
+        
+        function convertAngle(angle) {
+            if (isDegreeMode) {
+                return toRadians(angle);
+            } else if (isGradMode) {
+                return angle * (Math.PI / 200);
+            }
+            return angle; // Already in radians
+        }
+
+        function calculate() {
+            try {
+                // Replace display-friendly symbols with JavaScript-compatible ones
+                let expression = currentInput
+                    .replace(/×/g, '*')
+                    .replace(/÷/g, '/')
+                    .replace(/\^/g, '**')
+                    .replace(/π/g, 'Math.PI')
+                    .replace(/e/g, 'Math.E')
+                    .replace(/sin\(/g, isDegreeMode ? 'Math.sin(toRadians(' : (isGradMode ? 'Math.sin(toRadians(' : 'Math.sin('))
+                    .replace(/cos\(/g, isDegreeMode ? 'Math.cos(toRadians(' : (isGradMode ? 'Math.cos(toRadians(' : 'Math.cos('))
+                    .replace(/tan\(/g, isDegreeMode ? 'Math.tan(toRadians(' : (isGradMode ? 'Math.tan(toRadians(' : 'Math.tan('))
+                    .replace(/sin⁻¹\(/g, isDegreeMode ? 'toDegrees(Math.asin(' : (isGradMode ? 'toGradians(Math.asin(' : 'Math.asin('))
+                    .replace(/cos⁻¹\(/g, isDegreeMode ? 'toDegrees(Math.acos(' : (isGradMode ? 'toGradians(Math.acos(' : 'Math.acos('))
+                    .replace(/tan⁻¹\(/g, isDegreeMode ? 'toDegrees(Math.atan(' : (isGradMode ? 'toGradians(Math.atan(' : 'Math.atan('));
+
+                // Evaluate the expression
+                history = currentInput + ' =';
+                currentInput = eval(expression).toString();
+                updateDisplay();
+            } catch (e) {
+                currentInput = 'Error';
+                updateDisplay();
+            }
+        }
+        
+        // Programmer functions
+        function setBase(base) {
+            currentBase = base;
+            // Convert current input to the new base
+            try {
+                let value;
+                if (currentInput === '0') return;
+                
+                if (currentBase === 'bin') {
+                    value = parseInt(currentInput, 2);
+                } else if (currentBase === 'oct') {
+                    value = parseInt(currentInput, 8);
+                } else if (currentBase === 'hex') {
+                    value = parseInt(currentInput, 16);
+                } else {
+                    value = parseFloat(currentInput);
+                }
+                
+                currentInput = value.toString();
+                updateDisplay();
+            } catch (e) {
+                currentInput = 'Error';
+                updateDisplay();
+            }
+        }
+        
+        function toggleBitMode() {
+            // Toggle between showing binary representation
+            try {
+                const value = parseInt(currentInput);
+                if (currentInput.startsWith('0b')) {
+                    currentInput = parseInt(currentInput.substring(2), 2).toString();
+                } else {
+                    currentInput = '0b' + value.toString(2);
+                }
+                updateDisplay();
+            } catch (e) {
+                currentInput = 'Error';
+                updateDisplay();
+            }
+        }
+        
+        function convertToBinary() {
+            try {
+                const value = parseInt(currentInput);
+                history = `${value} → binary`;
+                currentInput = '0b' + value.toString(2);
+                updateDisplay();
+            } catch (e) {
+                currentInput = 'Error';
+                updateDisplay();
+            }
+        }
+        
+        function convertToOctal() {
+            try {
+                const value = parseInt(currentInput);
+                history = `${value} → octal`;
+                currentInput = '0o' + value.toString(8);
+                updateDisplay();
+            } catch (e) {
+                currentInput = 'Error';
+                updateDisplay();
+            }
+        }
+        
+        function convertToHex() {
+            try {
+                const value = parseInt(currentInput);
+                history = `${value} → hexadecimal`;
+                currentInput = '0x' + value.toString(16).toUpperCase();
+                updateDisplay();
+            } catch (e) {
+                currentInput = 'Error';
+                updateDisplay();
+            }
+        }
+        
+        function convertToDecimal() {
+            try {
+                let value;
+                if (currentInput.startsWith('0b')) {
+                    value = parseInt(currentInput.substring(2), 2);
+                    history = `${currentInput} → decimal`;
+                } else if (currentInput.startsWith('0o')) {
+                    value = parseInt(currentInput.substring(2), 8);
+                    history = `${currentInput} → decimal`;
+                } else if (currentInput.startsWith('0x')) {
+                    value = parseInt(currentInput.substring(2), 16);
+                    history = `${currentInput} → decimal`;
+                } else {
+                    value = parseInt(currentInput);
+                    history = `${currentInput} → decimal`;
+                }
+                currentInput = value.toString();
+                updateDisplay();
+            } catch (e) {
+                currentInput = 'Error';
+                updateDisplay();
+            }
+        }
+        
+        function bitCount() {
+            try {
+                const value = parseInt(currentInput);
+                history = `Bit count of ${value}`;
+                currentInput = value.toString(2).replace(/0/g, '').length.toString();
+                updateDisplay();
+            } catch (e) {
+                currentInput = 'Error';
+                updateDisplay();
+            }
+        }
+        
+        // Matrix functions
+        function showMatrixInput(rows, cols) {
+            const modal = document.getElementById('matrixModal');
+            const table = document.getElementById('matrixInputTable');
+            const title = document.getElementById('matrixModalTitle');
+            
+            title.textContent = `Enter ${rows}×${cols} Matrix`;
+            table.innerHTML = '';
+            
+            for (let i = 0; i < rows; i++) {
+                const row = document.createElement('tr');
+                for (let j = 0; j < cols; j++) {
+                    const cell = document.createElement('td');
+                    cell.innerHTML = `<input type="text" id="m${i}${j}" value="0">`;
+                    row.appendChild(cell);
+                }
+                table.appendChild(row);
+            }
+            
+            modal.style.display = 'flex';
+        }
+        
+        function closeMatrixModal() {
+            document.getElementById('matrixModal').style.display = 'none';
+        }
+        
+        function saveMatrix() {
+            const rows = document.getElementById('matrixInputTable').rows.length;
+            const cols = rows > 0 ? document.getElementById('matrixInputTable').rows[0].cells.length : 0;
+            
+            currentMatrix = {
+                rows: rows,
+                cols: cols,
+                data: []
+            };
+            
+            for (let i = 0; i < rows; i++) {
+                currentMatrix.data[i] = [];
+                for (let j = 0; j < cols; j++) {
+                    const value = parseFloat(document.getElementById(`m${i}${j}`).value) || 0;
+                    currentMatrix.data[i][j] = value;
+                }
+            }
+            
+            history = `Saved ${rows}×${cols} matrix`;
+            currentInput = 'MATRIX';
+            updateDisplay();
+            closeMatrixModal();
+        }
+        
+        function matrixDeterminant() {
+            if (!currentMatrix) {
+                currentInput = 'No matrix';
+                updateDisplay();
+                return;
+            }
+            
+            if (currentMatrix.rows !== currentMatrix.cols) {
+                currentInput = 'Not square';
+                updateDisplay();
+                return;
+            }
+            
+            // Simple determinant for 2x2
+            if (currentMatrix.rows === 2) {
+                const det = currentMatrix.data[0][0] * currentMatrix.data[1][1] - 
+                           currentMatrix.data[0][1] * currentMatrix.data[1][0];
+                history = `Determinant of matrix`;
+                currentInput = det.toString();
+                updateDisplay();
+                return;
+            }
+            
+            // For larger matrices, we'd implement a proper algorithm
+            currentInput = 'DET='; // Placeholder for actual calculation
+            updateDisplay();
+        }
+        
+        // ... other matrix functions would be implemented similarly
+        
+        // Graphing functions
+        function graphFunction(func) {
+            graphFunctions.push({
+                fn: func,
+                color: getRandomColor()
+            });
+            drawGraph();
+        }
+        
+        function promptGraphFunction() {
+            document.getElementById('graphModal').style.display = 'flex';
+        }
+        
+        function closeGraphModal() {
+            document.getElementById('graphModal').style.display = 'none';
+        }
+        
+        function graphCustomFunction() {
+            const func = document.getElementById('graphFunctionInput').value;
+            if (func) {
+                graphFunction(func);
+                closeGraphModal();
+            }
+        }
+        
+        function clearGraph() {
+            graphFunctions = [];
+            drawGraph();
+        }
+        
+        function zoomIn() {
+            graphScale *= 1.2;
+            drawGraph();
+        }
+        
+        function zoomOut() {
+            graphScale /= 1.2;
+            drawGraph();
+        }
+        
+        function panLeft() {
+            graphOffsetX -= 20;
+            drawGraph();
+        }
+        
+        function panRight() {
+            graphOffsetX += 20;
+            drawGraph();
+        }
+        
+        function panUp() {
+            graphOffsetY -= 20;
+            drawGraph();
+        }
+        
+        function panDown() {
+            graphOffsetY += 20;
+            drawGraph();
+        }
+        
+        function findRoot() {
+            // Implement root finding algorithm
+        }
+        
+        function findIntersection() {
+            // Implement intersection finding algorithm
+        }
+        
+        function drawGraph() {
+            const width = graphCanvas.width;
+            const height = graphCanvas.height;
+            const centerX = width / 2 + graphOffsetX;
+            const centerY = height / 2 + graphOffsetY;
+            const scale = 50 * graphScale;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw axes
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 1;
+            
+            // X axis
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(width, centerY);
+            ctx.stroke();
+            
+            // Y axis
+            ctx.beginPath();
+            ctx.moveTo(centerX, 0);
+            ctx.lineTo(centerX, height);
+            ctx.stroke();
+            
+            // Draw grid
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 0.5;
+            
+            // Vertical grid lines
+            for (let x = centerX % scale; x < width; x += scale) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+            
+            // Horizontal grid lines
+            for (let y = centerY % scale; y < height; y += scale) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+            
+            // Draw functions
+            graphFunctions.forEach(func => {
+                ctx.strokeStyle = func.color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                
+                let firstPoint = true;
+                for (let px = 0; px < width; px++) {
+                    const x = (px - centerX) / scale;
+                    let y;
+                    
+                    try {
+                        // Replace x in the function with the current x value
+                        const expr = func.fn.replace(/x/g, `(${x})`);
+                        y = -eval(expr) * scale + centerY;
+                        
+                        if (isNaN(y) || !isFinite(y)) continue;
+                        
+                        if (firstPoint) {
+                            ctx.moveTo(px, y);
+                            firstPoint = false;
+                        } else {
+                            ctx.lineTo(px, y);
+                        }
+                    } catch (e) {
+                        // Skip invalid points
+                        firstPoint = true;
+                    }
+                }
+                
+                ctx.stroke();
+            });
+        }
+        
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+        
+        // Calculus functions
+        function calculateDerivative() {
+            // Implement numerical differentiation
+            history = "Derivative";
+            currentInput = "d/dx";
+            updateDisplay();
+        }
+        
+        // ... other calculus functions would be implemented similarly
+        
+        // Statistics functions
+        function calculateMean() {
+            // Implement mean calculation
+            history = "Mean";
+            currentInput = "μ";
+            updateDisplay();
+        }
+        
+        // ... other statistics functions would be implemented similarly
+        
+        // Physics functions
+        function calculateKinematics() {
+            // Implement kinematics equations
+            history = "Kinematics";
+            currentInput = "v = u + at";
+            updateDisplay();
+        }
+        
+        // ... other physics functions would be implemented similarly
+
+        // Keyboard support
+        document.addEventListener('keydown', function(event) {
+            if (/[0-9]/.test(event.key)) {
+                addToDisplay(event.key);
+            } else if (event.key === '+' || event.key === '-' || event.key === '*' || event.key === '/') {
+                addToDisplay(event.key);
+            } else if (event.key === 'Enter') {
+                calculate();
+            } else if (event.key === 'Escape') {
+                clearDisplay();
+            } else if (event.key === 'Backspace') {
+                backspace();
+            } else if (event.key === '.') {
+                addToDisplay('.');
+            } else if (event.key === '(' || event.key === ')') {
+                addToDisplay(event.key);
+            } else if (event.key === '^') {
+                addToDisplay('**');
+            }
+        });
+        
+        // Initialize the calculator
+        window.addEventListener('resize', initGraphCanvas);
+        initGraphCanvas();
+    </script>
+</body>
+</html>
